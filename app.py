@@ -311,6 +311,76 @@ def index():
                          last_run=last_run_time)
 
 
+@app.route('/settings')
+@login_required
+def settings_page():
+    return render_template('settings.html', config=CONFIG)
+
+
+@app.route('/api/save-config', methods=['POST'])
+@login_required
+def save_config():
+    """Save configuration to .env file"""
+    try:
+        data = request.get_json()
+
+        # Update .env file
+        env_file = os.path.join(os.path.dirname(__file__), '.env')
+        env_vars = {}
+
+        # Read existing .env
+        if os.path.exists(env_file):
+            with open(env_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        env_vars[key.strip()] = value.strip()
+
+        # Update with new values (only if not empty)
+        if data.get('gemini_api_key'):
+            env_vars['GEMINI_API_KEY'] = data['gemini_api_key']
+        if data.get('apify_api_key'):
+            env_vars['APIFY_API_KEY'] = data['apify_api_key']
+        if data.get('admin_password'):
+            env_vars['ADMIN_PASSWORD'] = data['admin_password']
+        if data.get('business_name'):
+            env_vars['BUSINESS_NAME'] = data['business_name']
+        if data.get('location'):
+            env_vars['LOCATION'] = data['location']
+        if data.get('competitors'):
+            env_vars['COMPETITORS'] = data['competitors']
+        if data.get('port'):
+            env_vars['PORT'] = str(data['port'])
+
+        # Add SECRET_KEY if not exists
+        if 'SECRET_KEY' not in env_vars:
+            env_vars['SECRET_KEY'] = secrets.token_hex(32)
+
+        # Write back to .env
+        with open(env_file, 'w', encoding='utf-8') as f:
+            f.write("# Sunset Social Configuration\n")
+            f.write("# Generated/Updated by Settings Page\n\n")
+            f.write("# API Keys\n")
+            f.write(f"GEMINI_API_KEY={env_vars.get('GEMINI_API_KEY', '')}\n")
+            f.write(f"APIFY_API_KEY={env_vars.get('APIFY_API_KEY', '')}\n\n")
+            f.write("# Security\n")
+            f.write(f"SECRET_KEY={env_vars.get('SECRET_KEY', '')}\n")
+            f.write(f"ADMIN_PASSWORD={env_vars.get('ADMIN_PASSWORD', 'sunset2024')}\n\n")
+            f.write("# Configuration\n")
+            f.write(f"BUSINESS_NAME={env_vars.get('BUSINESS_NAME', 'Sunset')}\n")
+            f.write(f"LOCATION={env_vars.get('LOCATION', 'zona porto/spiaggia')}\n")
+            f.write(f"COMPETITORS={env_vars.get('COMPETITORS', 'Bar del Porto,Lounge Mediterraneo,Beach Club')}\n")
+            f.write(f"PORT={env_vars.get('PORT', '4123')}\n")
+
+        logger.info("Configuration saved successfully to .env")
+        return jsonify({'success': True, 'message': 'Configurazione salvata!'})
+
+    except Exception as e:
+        logger.error(f"Error saving configuration: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
 @app.route('/api/approve/<int:idea_id>', methods=['POST'])
 @login_required
 def approve_idea(idea_id):

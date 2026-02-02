@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ Impostazioni - Sunset Social</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --sunset-orange: #ff6b35;
+            --sunset-pink: #ff85a2;
+            --sunset-purple: #9d4edd;
+            --dark-bg: #1a1a2e;
+            --card-bg: #16213e;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #0f3460 100%);
+            color: #f1f1f1;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: rgba(26, 26, 46, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid var(--sunset-orange);
+        }
+
+        .settings-container {
+            max-width: 900px;
+            margin: 2rem auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--sunset-purple), var(--sunset-pink));
+            border: none;
+            font-weight: bold;
+            padding: 1rem;
+        }
+
+        .form-label {
+            color: var(--sunset-orange);
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            color: #f1f1f1;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--sunset-orange);
+            color: #f1f1f1;
+            box-shadow: 0 0 0 0.25rem rgba(255, 107, 53, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+            font-size: 1.1rem;
+            padding: 0.75rem 2rem;
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, var(--sunset-orange), var(--sunset-pink));
+            border: none;
+        }
+
+        .alert-info {
+            background: rgba(13, 202, 240, 0.2);
+            border: 1px solid rgba(13, 202, 240, 0.5);
+            color: #9cf;
+        }
+
+        .alert-warning {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            color: #ffeb3b;
+        }
+
+        .api-help {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-top: 0.25rem;
+        }
+
+        .api-help a {
+            color: var(--sunset-pink);
+            text-decoration: none;
+        }
+
+        .api-help a:hover {
+            text-decoration: underline;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark sticky-top">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-gear-fill"></i> Impostazioni
+            </span>
+            <a href="/" class="btn btn-back btn-sm">
+                <i class="bi bi-arrow-left"></i> Torna alla Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="container settings-container">
+
+        <!-- Intro Alert -->
+        <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle"></i> <strong>Configura l'applicazione</strong><br>
+            Inserisci le tue API keys e personalizza le impostazioni. Le credenziali verranno salvate in modo sicuro nel file .env
+        </div>
+
+        <!-- API Keys Section -->
+        <div class="card">
+            <div class="card-header">
+                🔑 API Keys
+            </div>
+            <div class="card-body">
+                <form id="settingsForm">
+
+                    <!-- Gemini API Key -->
+                    <div class="mb-3">
+                        <label for="gemini_api_key" class="form-label">
+                            <i class="bi bi-stars"></i> Google Gemini API Key
+                        </label>
+                        <input type="password" class="form-control" id="gemini_api_key"
+                               name="gemini_api_key" value="{{ config.gemini_api_key }}"
+                               placeholder="Lascia vuoto per usare dati mock">
+                        <div class="api-help">
+                            <a href="https://makersuite.google.com/app/apikey" target="_blank">
+                                → Ottieni la tua API key da Google AI Studio
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Apify API Key -->
+                    <div class="mb-3">
+                        <label for="apify_api_key" class="form-label">
+                            <i class="bi bi-code-square"></i> Apify API Key
+                        </label>
+                        <input type="password" class="form-control" id="apify_api_key"
+                               name="apify_api_key" value="{{ config.apify_api_key }}"
+                               placeholder="Lascia vuoto per usare dati mock">
+                        <div class="api-help">
+                            <a href="https://console.apify.com/account/integrations" target="_blank">
+                                → Ottieni la tua API token da Apify Console
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Admin Password -->
+                    <div class="mb-3">
+                        <label for="admin_password" class="form-label">
+                            <i class="bi bi-shield-lock"></i> Password Amministratore
+                        </label>
+                        <input type="password" class="form-control" id="admin_password"
+                               name="admin_password" placeholder="Nuova password (lascia vuoto per non cambiare)">
+                        <div class="api-help">
+                            Attuale: ••••••••
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <!-- Business Config Section -->
+        <div class="card">
+            <div class="card-header">
+                🏢 Configurazione Business
+            </div>
+            <div class="card-body">
+                <form id="businessForm">
+
+                    <!-- Business Name -->
+                    <div class="mb-3">
+                        <label for="business_name" class="form-label">
+                            <i class="bi bi-shop"></i> Nome Business
+                        </label>
+                        <input type="text" class="form-control" id="business_name"
+                               name="business_name" value="{{ config.business_name }}" required>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="mb-3">
+                        <label for="location" class="form-label">
+                            <i class="bi bi-geo-alt"></i> Zona/Location
+                        </label>
+                        <input type="text" class="form-control" id="location"
+                               name="location" value="{{ config.location }}" required>
+                        <div class="api-help">
+                            Es: zona porto/spiaggia, centro città, quartiere X
+                        </div>
+                    </div>
+
+                    <!-- Competitors -->
+                    <div class="mb-3">
+                        <label for="competitors" class="form-label">
+                            <i class="bi bi-people"></i> Competitor (separati da virgola)
+                        </label>
+                        <input type="text" class="form-control" id="competitors"
+                               name="competitors" value="{{ config.competitors|join(', ') }}" required>
+                        <div class="api-help">
+                            Es: Bar del Porto, Lounge Mediterraneo, Beach Club
+                        </div>
+                    </div>
+
+                    <!-- Port -->
+                    <div class="mb-3">
+                        <label for="port" class="form-label">
+                            <i class="bi bi-wifi"></i> Porta Applicazione
+                        </label>
+                        <input type="number" class="form-control" id="port"
+                               name="port" value="{{ config.port }}" required min="1024" max="65535">
+                        <div class="api-help">
+                            Richiede riavvio dell'app per applicare
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="text-center mb-4">
+            <button class="btn btn-save btn-lg" onclick="saveSettings()">
+                <i class="bi bi-save"></i> Salva Configurazione
+            </button>
+        </div>
+
+        <!-- Warning Alert -->
+        <div class="alert alert-warning" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> <strong>Nota importante:</strong><br>
+            Dopo aver salvato, riavvia l'applicazione per applicare tutte le modifiche.
+        </div>
+
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showToast(message, type = 'success') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+
+            const toastHTML = `
+                <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+
+            setTimeout(() => toastElement.remove(), 5000);
+        }
+
+        async function saveSettings() {
+            const btn = event.target.closest('button');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Salvataggio...';
+
+            // Raccogli tutti i dati dai form
+            const data = {
+                gemini_api_key: document.getElementById('gemini_api_key').value,
+                apify_api_key: document.getElementById('apify_api_key').value,
+                admin_password: document.getElementById('admin_password').value,
+                business_name: document.getElementById('business_name').value,
+                location: document.getElementById('location').value,
+                competitors: document.getElementById('competitors').value,
+                port: document.getElementById('port').value
+            };
+
+            try {
+                const response = await fetch('/api/save-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('✅ Configurazione salvata con successo! Riavvia l\'app per applicare.', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    showToast('❌ Errore: ' + result.message, 'danger');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-save"></i> Salva Configurazione';
+                }
+            } catch (error) {
+                showToast('❌ Errore di connessione', 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-save"></i> Salva Configurazione';
+            }
+        }
+    </script>
+</body>
+</html>

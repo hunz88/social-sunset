@@ -121,6 +121,12 @@
                 <button class="btn btn-run-now btn-sm" onclick="runScrapersNow()">
                     <i class="bi bi-play-circle"></i> Esegui Ora
                 </button>
+                <a href="/settings" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-gear"></i> Impostazioni
+                </a>
+                <a href="/logout" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
             </div>
         </div>
     </nav>
@@ -206,6 +212,24 @@
                         </div>
 
                         <div class="d-grid gap-2">
+                            <button class="btn btn-info btn-sm" onclick="copyPost('{{ idea.testo_post|replace("'", "\\'") }}', '{{ idea.piattaforma }}')">
+                                <i class="bi bi-clipboard"></i> Copia Post
+                            </button>
+                            <div class="btn-group" role="group">
+                                {% if 'Instagram' in idea.piattaforma %}
+                                <a href="https://www.instagram.com/" target="_blank" class="btn btn-outline-light btn-sm">
+                                    <i class="bi bi-instagram"></i> Apri Instagram
+                                </a>
+                                {% elif 'Facebook' in idea.piattaforma %}
+                                <a href="https://www.facebook.com/" target="_blank" class="btn btn-outline-light btn-sm">
+                                    <i class="bi bi-facebook"></i> Apri Facebook
+                                </a>
+                                {% elif 'TikTok' in idea.piattaforma %}
+                                <a href="https://www.tiktok.com/upload" target="_blank" class="btn btn-outline-light btn-sm">
+                                    <i class="bi bi-tiktok"></i> Apri TikTok
+                                </a>
+                                {% endif %}
+                            </div>
                             <button class="btn btn-approve btn-sm" onclick="approveIdea({{ loop.index0 }})">
                                 <i class="bi bi-check-lg"></i> Approva
                             </button>
@@ -295,6 +319,28 @@
             toast.show();
 
             setTimeout(() => toastElement.remove(), 5000);
+        }
+
+        function copyPost(text, platform) {
+            // Copia il testo negli appunti
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`📋 Post copiato! Ora aprilo su ${platform} e incollalo`, 'success');
+            }).catch(err => {
+                // Fallback per browser che non supportano clipboard API
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast(`📋 Post copiato! Ora aprilo su ${platform} e incollalo`, 'success');
+                } catch (err) {
+                    showToast('❌ Errore nella copia. Seleziona e copia manualmente il testo.', 'danger');
+                }
+                document.body.removeChild(textarea);
+            });
         }
 
         async function approveIdea(ideaId) {
