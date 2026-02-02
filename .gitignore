@@ -1,0 +1,7 @@
+*.pyc
+__pycache__/
+venv/
+.env
+data/
+post_pronti/
+*.log
