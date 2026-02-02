@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌅 Sunset Social - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --sunset-orange: #ff6b35;
+            --sunset-pink: #ff85a2;
+            --sunset-purple: #9d4edd;
+            --dark-bg: #1a1a2e;
+            --card-bg: #16213e;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #0f3460 100%);
+            color: #f1f1f1;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: rgba(26, 26, 46, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid var(--sunset-orange);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+
+        .badge-alta { background: #28a745; }
+        .badge-media { background: #ffc107; color: #000; }
+        .badge-bassa { background: #dc3545; }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+        }
+
+        .btn-reject {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            border: none;
+        }
+
+        .btn-run-now {
+            background: linear-gradient(135deg, var(--sunset-orange), var(--sunset-pink));
+            border: none;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--sunset-purple), var(--sunset-pink));
+            border: none;
+            color: white;
+        }
+
+        .idea-card {
+            margin-bottom: 1.5rem;
+        }
+
+        .platform-badge {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .section-title {
+            color: var(--sunset-orange);
+            border-bottom: 2px solid var(--sunset-orange);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark mb-4 sticky-top">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-sunset-fill"></i> Sunset Social Monitor
+            </span>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-secondary">
+                    <i class="bi bi-clock"></i>
+                    {% if last_run %}
+                        Ultimo scan: {{ last_run.strftime('%H:%M %d/%m') }}
+                    {% else %}
+                        Mai eseguito
+                    {% endif %}
+                </span>
+                <button class="btn btn-run-now btn-sm" onclick="runScrapersNow()">
+                    <i class="bi bi-play-circle"></i> Esegui Ora
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Stats Row -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card stat-card text-center p-3">
+                    <h2 class="mb-0"><i class="bi bi-hourglass-split"></i> {{ pending|length }}</h2>
+                    <small>Idee in Attesa</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card text-center p-3">
+                    <h2 class="mb-0"><i class="bi bi-check-circle"></i> {{ approved|length }}</h2>
+                    <small>Idee Approvate</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card text-center p-3">
+                    <h2 class="mb-0"><i class="bi bi-building"></i> {{ config.business_name }}</h2>
+                    <small>Business</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Config Info -->
+        <div class="card mb-4 p-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <strong><i class="bi bi-gear"></i> Configurazione:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Business: <span class="text-warning">{{ config.business_name }}</span></li>
+                        <li>Location: {{ config.location }}</li>
+                        <li>Porta: {{ config.port }}</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <strong><i class="bi bi-eye"></i> Competitor monitorati:</strong>
+                    <ul class="mb-0 mt-2">
+                        {% for comp in config.competitors %}
+                        <li>{{ comp }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Ideas -->
+        <h3 class="section-title">
+            <i class="bi bi-lightbulb"></i> Idee in Attesa di Approvazione
+        </h3>
+
+        {% if pending %}
+        <div class="row">
+            {% for idea in pending %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card idea-card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ idea.titolo }}</h5>
+                        <p class="card-text small text-muted">{{ idea.descrizione }}</p>
+
+                        <div class="mb-3">
+                            <strong>Testo Post:</strong>
+                            <p class="small border-start border-3 ps-2 mt-1">{{ idea.testo_post }}</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Media suggeriti:</strong>
+                            <p class="small text-info">{{ idea.media_suggeriti }}</p>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge platform-badge bg-primary">
+                                <i class="bi bi-{{ 'instagram' if 'Instagram' in idea.piattaforma else 'facebook' if 'Facebook' in idea.piattaforma else 'tiktok' }}"></i>
+                                {{ idea.piattaforma }}
+                            </span>
+                            <span class="badge badge-{{ idea.affidabilita.lower() }}">
+                                {{ idea.affidabilita }}
+                            </span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-approve btn-sm" onclick="approveIdea({{ loop.index0 }})">
+                                <i class="bi bi-check-lg"></i> Approva
+                            </button>
+                            <button class="btn btn-reject btn-sm" onclick="rejectIdea({{ loop.index0 }})">
+                                <i class="bi bi-x-lg"></i> Scarta
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted small">
+                        <i class="bi bi-clock"></i> {{ idea.timestamp[:16].replace('T', ' ') }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <p>Nessuna idea in attesa. Clicca "Esegui Ora" per generarne di nuove!</p>
+        </div>
+        {% endif %}
+
+        <!-- Approved Ideas -->
+        <h3 class="section-title mt-5">
+            <i class="bi bi-check2-all"></i> Ultime Idee Approvate
+        </h3>
+
+        {% if approved %}
+        <div class="row">
+            {% for idea in approved %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card idea-card opacity-75">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            {{ idea.titolo }}
+                        </h6>
+                        <p class="card-text small">{{ idea.testo_post }}</p>
+                        <small class="text-muted">
+                            <i class="bi bi-{{ 'instagram' if 'Instagram' in idea.piattaforma else 'facebook' if 'Facebook' in idea.piattaforma else 'tiktok' }}"></i>
+                            {{ idea.piattaforma }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-check2-circle"></i>
+            <p>Nessuna idea approvata ancora.</p>
+        </div>
+        {% endif %}
+
+        <footer class="text-center text-muted mt-5 mb-3">
+            <small>
+                🌅 Sunset Social Monitor v1.0 |
+                <i class="bi bi-cpu"></i> Ottimizzato per Raspberry Pi
+            </small>
+        </footer>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showToast(message, type = 'success') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+
+            const toastHTML = `
+                <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+
+            setTimeout(() => toastElement.remove(), 5000);
+        }
+
+        async function approveIdea(ideaId) {
+            try {
+                const response = await fetch(`/api/approve/${ideaId}`, { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('✅ Idea approvata con successo!', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('❌ Errore: ' + data.message, 'danger');
+                }
+            } catch (error) {
+                showToast('❌ Errore di connessione', 'danger');
+            }
+        }
+
+        async function rejectIdea(ideaId) {
+            try {
+                const response = await fetch(`/api/reject/${ideaId}`, { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('🗑️ Idea scartata', 'warning');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('❌ Errore: ' + data.message, 'danger');
+                }
+            } catch (error) {
+                showToast('❌ Errore di connessione', 'danger');
+            }
+        }
+
+        async function runScrapersNow() {
+            const btn = event.target.closest('button');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Esecuzione...';
+
+            try {
+                const response = await fetch('/api/run-now', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('🚀 Scrapers avviati! Aggiorna tra 2 minuti.', 'success');
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-play-circle"></i> Esegui Ora';
+                    }, 120000); // 2 minutes
+                } else {
+                    showToast('❌ Errore nell\'avvio degli scrapers', 'danger');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-play-circle"></i> Esegui Ora';
+                }
+            } catch (error) {
+                showToast('❌ Errore di connessione', 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-play-circle"></i> Esegui Ora';
+            }
+        }
+
+        // Auto-refresh ogni 5 minuti se ci sono idee pending
+        {% if pending %}
+        setTimeout(() => location.reload(), 300000);
+        {% endif %}
+    </script>
+</body>
+</html>
