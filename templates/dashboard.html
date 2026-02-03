@@ -121,6 +121,9 @@
                 <button class="btn btn-run-now btn-sm" onclick="runScrapersNow()">
                     <i class="bi bi-play-circle"></i> Esegui Ora
                 </button>
+                <a href="/history" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-clock-history"></i> Storico
+                </a>
                 <a href="/settings" class="btn btn-outline-warning btn-sm">
                     <i class="bi bi-gear"></i> Impostazioni
                 </a>
@@ -212,21 +215,24 @@
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button class="btn btn-info btn-sm" onclick="copyPost('{{ idea.testo_post|replace("'", "\\'") }}', '{{ idea.piattaforma }}')">
-                                <i class="bi bi-clipboard"></i> Copia Post
+                            <button class="btn btn-outline-info btn-sm" onclick="showPreview({{ loop.index0 }})">
+                                <i class="bi bi-eye"></i> Anteprima
                             </button>
                             <div class="btn-group" role="group">
+                                <button class="btn btn-info btn-sm" onclick="copyPost('{{ idea.testo_post|replace("'", "\\'") }}', '{{ idea.piattaforma }}')">
+                                    <i class="bi bi-clipboard"></i> Copia
+                                </button>
                                 {% if 'Instagram' in idea.piattaforma %}
                                 <a href="https://www.instagram.com/" target="_blank" class="btn btn-outline-light btn-sm">
-                                    <i class="bi bi-instagram"></i> Apri Instagram
+                                    <i class="bi bi-instagram"></i>
                                 </a>
                                 {% elif 'Facebook' in idea.piattaforma %}
                                 <a href="https://www.facebook.com/" target="_blank" class="btn btn-outline-light btn-sm">
-                                    <i class="bi bi-facebook"></i> Apri Facebook
+                                    <i class="bi bi-facebook"></i>
                                 </a>
                                 {% elif 'TikTok' in idea.piattaforma %}
                                 <a href="https://www.tiktok.com/upload" target="_blank" class="btn btn-outline-light btn-sm">
-                                    <i class="bi bi-tiktok"></i> Apri TikTok
+                                    <i class="bi bi-tiktok"></i>
                                 </a>
                                 {% endif %}
                             </div>
@@ -295,8 +301,102 @@
     <!-- Toast Container -->
     <div class="toast-container"></div>
 
+    <!-- Modale Anteprima -->
+    <div class="modal fade" id="previewModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content" style="background: transparent; border: none; box-shadow: none;">
+                <div class="text-end mb-2">
+                    <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i> Chiudi
+                    </button>
+                </div>
+                <div id="previewContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .preview-instagram {
+            max-width: 400px; margin: 0 auto; background: #fff;
+            border-radius: 12px; color: #333; overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .preview-instagram .ig-header {
+            display: flex; align-items: center; padding: 12px; gap: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .preview-instagram .ig-avatar {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 0.85rem;
+        }
+        .preview-instagram .ig-username { font-weight: 600; font-size: 0.9rem; }
+        .preview-instagram .ig-location { font-size: 0.75rem; color: #888; }
+        .preview-instagram .ig-image {
+            width: 100%; aspect-ratio: 1;
+            background: linear-gradient(135deg, #ff6b35, #ff85a2, #9d4edd);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 3rem;
+        }
+        .preview-instagram .ig-actions { padding: 10px 12px; display: flex; gap: 15px; color: #333; font-size: 1.2rem; }
+        .preview-instagram .ig-caption { padding: 0 12px 12px; font-size: 0.9rem; line-height: 1.4; }
+        .preview-instagram .ig-caption strong { font-weight: 600; }
+        .preview-instagram .ig-hashtags { color: #00aaee; margin-top: 4px; font-size: 0.85rem; }
+        .preview-instagram .ig-time { padding: 0 12px 10px; font-size: 0.75rem; color: #aaa; }
+
+        .preview-facebook {
+            max-width: 400px; margin: 0 auto; background: #fff;
+            border-radius: 12px; color: #333; overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .preview-facebook .fb-header { display: flex; align-items: center; padding: 12px; gap: 10px; }
+        .preview-facebook .fb-avatar {
+            width: 42px; height: 42px; border-radius: 50%; background: #1877f2;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 1rem;
+        }
+        .preview-facebook .fb-username { font-weight: 600; font-size: 0.9rem; }
+        .preview-facebook .fb-time { font-size: 0.75rem; color: #65676b; }
+        .preview-facebook .fb-text { padding: 0 12px 12px; font-size: 0.9rem; line-height: 1.5; }
+        .preview-facebook .fb-image {
+            width: 100%; height: 180px;
+            background: linear-gradient(135deg, #1877f2, #0d47a1);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 3rem;
+        }
+        .preview-facebook .fb-actions { border-top: 1px solid #e4e6eb; padding: 8px 12px; display: flex; gap: 10px; color: #65676b; font-size: 0.85rem; }
+
+        .preview-tiktok {
+            max-width: 280px; margin: 0 auto; background: #010101;
+            border-radius: 12px; color: #fff; overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .preview-tiktok .tt-video {
+            width: 100%; aspect-ratio: 9/16; max-height: 350px;
+            background: linear-gradient(180deg, #010101 0%, #9d4edd 40%, #ff85a2 70%, #ff6b35 100%);
+            position: relative; display: flex; align-items: center; justify-content: center;
+        }
+        .preview-tiktok .tt-video-icon { font-size: 4rem; opacity: 0.6; }
+        .preview-tiktok .tt-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 60px 12px 12px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+        }
+        .preview-tiktok .tt-username { font-weight: 700; font-size: 0.9rem; }
+        .preview-tiktok .tt-caption { font-size: 0.85rem; margin-top: 4px; line-height: 1.3; }
+        .preview-tiktok .tt-hashtags { color: #fff; font-weight: 600; margin-top: 4px; font-size: 0.8rem; }
+        .preview-tiktok .tt-sidebar {
+            position: absolute; right: 12px; bottom: 80px;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 18px; font-size: 0.75rem; text-align: center;
+        }
+        .preview-tiktok .tt-sidebar i { font-size: 1.4rem; }
+    </style>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const pendingIdeas = {{ pending|tojson }};
         function showToast(message, type = 'success') {
             const toastContainer = document.querySelector('.toast-container');
             const toastId = 'toast-' + Date.now();
@@ -341,6 +441,74 @@
                 }
                 document.body.removeChild(textarea);
             });
+        }
+
+        function showPreview(ideaIndex) {
+            const idea = pendingIdeas[ideaIndex];
+            if (!idea) return;
+            let html = '';
+
+            if (idea.piattaforma.includes('Instagram')) {
+                html = `
+                <div class="preview-instagram">
+                    <div class="ig-header">
+                        <div class="ig-avatar">S</div>
+                        <div>
+                            <div class="ig-username">sunset_social</div>
+                            <div class="ig-location">{{ config.location }}</div>
+                        </div>
+                    </div>
+                    <div class="ig-image">📸</div>
+                    <div class="ig-actions">
+                        <i class="bi bi-heart"></i>
+                        <i class="bi bi-chat"></i>
+                        <i class="bi bi-share"></i>
+                    </div>
+                    <div class="ig-caption">
+                        <strong>sunset_social</strong> ${idea.testo_post}
+                        <div class="ig-hashtags">${idea.media_suggeriti}</div>
+                    </div>
+                    <div class="ig-time">Poco fa</div>
+                </div>`;
+            } else if (idea.piattaforma.includes('Facebook')) {
+                html = `
+                <div class="preview-facebook">
+                    <div class="fb-header">
+                        <div class="fb-avatar">S</div>
+                        <div>
+                            <div class="fb-username">Sunset Social</div>
+                            <div class="fb-time">Poco fa · 🌐</div>
+                        </div>
+                    </div>
+                    <div class="fb-text">${idea.testo_post}</div>
+                    <div class="fb-image">📢</div>
+                    <div class="fb-actions">
+                        <span><i class="bi bi-hand-thumbs-up"></i> Mi piace</span>
+                        <span><i class="bi bi-chat"></i> Commenta</span>
+                        <span><i class="bi bi-share"></i> Condividi</span>
+                    </div>
+                </div>`;
+            } else if (idea.piattaforma.includes('TikTok')) {
+                html = `
+                <div class="preview-tiktok">
+                    <div class="tt-video">
+                        <div class="tt-video-icon">🎬</div>
+                        <div class="tt-overlay">
+                            <div class="tt-username">@sunset_social</div>
+                            <div class="tt-caption">${idea.testo_post}</div>
+                            <div class="tt-hashtags">${idea.media_suggeriti}</div>
+                        </div>
+                        <div class="tt-sidebar">
+                            <div><i class="bi bi-heart-fill"></i><br>1.2K</div>
+                            <div><i class="bi bi-chat-fill"></i><br>84</div>
+                            <div><i class="bi bi-share-fill"></i><br>32</div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            document.getElementById('previewContent').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('previewModal')).show();
         }
 
         async function approveIdea(ideaId) {

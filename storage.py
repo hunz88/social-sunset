@@ -90,6 +90,67 @@ class DataStore:
             return idea
         return None
 
+    def edit_approved(self, approved_list, idea_id, updates):
+        """Edit an approved idea in place"""
+        if 0 <= idea_id < len(approved_list):
+            idea = approved_list[idea_id]
+            idea['titolo'] = updates.get('titolo', idea['titolo'])
+            idea['testo_post'] = updates.get('testo_post', idea['testo_post'])
+            idea['descrizione'] = updates.get('descrizione', idea['descrizione'])
+            idea['media_suggeriti'] = updates.get('media_suggeriti', idea['media_suggeriti'])
+            idea['piattaforma'] = updates.get('piattaforma', idea['piattaforma'])
+            idea['edited_at'] = datetime.now().isoformat()
+
+            self.save_approved(approved_list)
+
+            # Aggiorna anche il file in post_pronti
+            self._update_post_file(idea)
+            return idea
+        return None
+
+    def delete_approved(self, approved_list, idea_id):
+        """Delete an approved idea"""
+        if 0 <= idea_id < len(approved_list):
+            idea = approved_list.pop(idea_id)
+            self.save_approved(approved_list)
+
+            # Rimuovi anche il file in post_pronti
+            self._remove_post_file(idea)
+            return idea
+        return None
+
+    def _update_post_file(self, idea):
+        """Update the corresponding file in post_pronti"""
+        import glob
+        posts_dir = os.path.expanduser('~/SunsetSocial/post_pronti')
+        if not os.path.exists(posts_dir):
+            return
+
+        # Cerca il file corrispondente per timestamp
+        approved_at = idea.get('approved_at', '')
+        if approved_at:
+            timestamp = approved_at[:19].replace('-', '').replace(':', '').replace('T', '_')
+            pattern = os.path.join(posts_dir, f"{timestamp}*")
+            files = glob.glob(pattern)
+            if files:
+                with open(files[0], 'w', encoding='utf-8') as f:
+                    json.dump(idea, f, indent=2, ensure_ascii=False)
+
+    def _remove_post_file(self, idea):
+        """Remove the corresponding file from post_pronti"""
+        import glob
+        posts_dir = os.path.expanduser('~/SunsetSocial/post_pronti')
+        if not os.path.exists(posts_dir):
+            return
+
+        approved_at = idea.get('approved_at', '')
+        if approved_at:
+            timestamp = approved_at[:19].replace('-', '').replace(':', '').replace('T', '_')
+            pattern = os.path.join(posts_dir, f"{timestamp}*")
+            files = glob.glob(pattern)
+            for f in files:
+                os.remove(f)
+
     def backup_data(self):
         """Create timestamped backup of current state"""
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')

@@ -423,6 +423,45 @@ def stats():
     })
 
 
+@app.route('/history')
+@login_required
+def history_page():
+    return render_template('history.html',
+                         approved=approved_ideas,
+                         config=CONFIG)
+
+
+@app.route('/api/edit-idea/<int:idea_id>', methods=['POST'])
+@login_required
+def edit_idea(idea_id):
+    global approved_ideas
+    try:
+        updates = request.get_json()
+        idea = datastore.edit_approved(approved_ideas, idea_id, updates)
+        if idea:
+            logger.info(f"Idea {idea_id} edited: {idea.get('titolo', '')}")
+            return jsonify({'success': True, 'message': 'Post modificato!', 'idea': idea})
+        return jsonify({'success': False, 'message': 'Post non trovato'}), 404
+    except Exception as e:
+        logger.error(f"Error editing idea {idea_id}: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/delete-idea/<int:idea_id>', methods=['POST'])
+@login_required
+def delete_idea(idea_id):
+    global approved_ideas
+    try:
+        idea = datastore.delete_approved(approved_ideas, idea_id)
+        if idea:
+            logger.info(f"Idea {idea_id} deleted: {idea.get('titolo', '')}")
+            return jsonify({'success': True, 'message': 'Post cancellato!'})
+        return jsonify({'success': False, 'message': 'Post non trovato'}), 404
+    except Exception as e:
+        logger.error(f"Error deleting idea {idea_id}: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
 def init_scheduler():
     scheduler = BackgroundScheduler()
     scheduler.add_job(func=run_scrapers, trigger='cron', hour=9, minute=0)

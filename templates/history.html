@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Storico - Sunset Social</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --sunset-orange: #ff6b35;
+            --sunset-pink: #ff85a2;
+            --sunset-purple: #9d4edd;
+            --dark-bg: #1a1a2e;
+            --card-bg: #16213e;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #0f3460 100%);
+            color: #f1f1f1;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: rgba(26, 26, 46, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid var(--sunset-orange);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--sunset-purple), var(--sunset-pink));
+            border: none;
+            color: white;
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, var(--sunset-orange), var(--sunset-pink));
+            border: none;
+        }
+
+        .section-title {
+            color: var(--sunset-orange);
+            border-bottom: 2px solid var(--sunset-orange);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.4);
+            color: #f1f1f1;
+            margin-right: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--sunset-orange);
+            border-color: var(--sunset-orange);
+            color: white;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        /* ─── ANTEPRIMA INSTAGRAM ─── */
+        .preview-instagram {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            color: #333;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        .preview-instagram .ig-header {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            gap: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .preview-instagram .ig-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .preview-instagram .ig-username {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .preview-instagram .ig-location {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .preview-instagram .ig-image {
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #ff6b35, #ff85a2, #9d4edd);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+
+        .preview-instagram .ig-actions {
+            padding: 10px 12px;
+            display: flex;
+            gap: 15px;
+            color: #333;
+            font-size: 1.2rem;
+        }
+
+        .preview-instagram .ig-caption {
+            padding: 0 12px 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .preview-instagram .ig-caption strong {
+            font-weight: 600;
+        }
+
+        .preview-instagram .ig-hashtags {
+            color: #00aaee;
+            margin-top: 4px;
+            font-size: 0.85rem;
+        }
+
+        .preview-instagram .ig-time {
+            padding: 0 12px 10px;
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+
+        /* ─── ANTEPRIMA FACEBOOK ─── */
+        .preview-facebook {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            color: #333;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        .preview-facebook .fb-header {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            gap: 10px;
+        }
+
+        .preview-facebook .fb-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #1877f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .preview-facebook .fb-username {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .preview-facebook .fb-time {
+            font-size: 0.75rem;
+            color: #65676b;
+        }
+
+        .preview-facebook .fb-text {
+            padding: 0 12px 12px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .preview-facebook .fb-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #1877f2, #0d47a1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+
+        .preview-facebook .fb-actions {
+            border-top: 1px solid #e4e6eb;
+            padding: 8px 12px;
+            display: flex;
+            gap: 10px;
+            color: #65676b;
+            font-size: 0.85rem;
+        }
+
+        /* ─── ANTEPRIMA TIKTOK ─── */
+        .preview-tiktok {
+            max-width: 280px;
+            margin: 0 auto;
+            background: #010101;
+            border-radius: 12px;
+            color: #fff;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        .preview-tiktok .tt-video {
+            width: 100%;
+            aspect-ratio: 9/16;
+            max-height: 350px;
+            background: linear-gradient(180deg, #010101 0%, #9d4edd 40%, #ff85a2 70%, #ff6b35 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-tiktok .tt-video-icon {
+            font-size: 4rem;
+            opacity: 0.6;
+        }
+
+        .preview-tiktok .tt-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 60px 12px 12px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+        }
+
+        .preview-tiktok .tt-username {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .preview-tiktok .tt-caption {
+            font-size: 0.85rem;
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+
+        .preview-tiktok .tt-hashtags {
+            color: #fff;
+            font-weight: 600;
+            margin-top: 4px;
+            font-size: 0.8rem;
+        }
+
+        .preview-tiktok .tt-sidebar {
+            position: absolute;
+            right: 12px;
+            bottom: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .preview-tiktok .tt-sidebar i {
+            font-size: 1.4rem;
+        }
+
+        /* ─── MODALE EDIT ─── */
+        .modal-dark .modal-content {
+            background: var(--card-bg);
+            color: #f1f1f1;
+            border: 1px solid rgba(255, 107, 53, 0.4);
+        }
+
+        .modal-dark .modal-header {
+            border-bottom-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .modal-dark .btn-close {
+            filter: invert(1);
+        }
+
+        .modal-dark .form-label {
+            color: var(--sunset-orange);
+            font-weight: 500;
+        }
+
+        .modal-dark .form-control, .modal-dark .form-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            color: #f1f1f1;
+        }
+
+        .modal-dark .form-control:focus, .modal-dark .form-select:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--sunset-orange);
+            color: #f1f1f1;
+            box-shadow: 0 0 0 0.25rem rgba(255, 107, 53, 0.25);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark mb-4 sticky-top">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-clock-history"></i> Storico Post
+            </span>
+            <a href="/" class="btn btn-back btn-sm">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Stats Row -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card stat-card text-center p-3">
+                    <h2 class="mb-0"><i class="bi bi-check2-all"></i> {{ approved|length }}</h2>
+                    <small>Post Totali</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card text-center p-3">
+                    <h2 class="mb-0"><i class="bi bi-instagram"></i>
+                        {{ approved|selectattr('piattaforma', 'containing', 'Instagram')|list|length }}
+                    </h2>
+                    <small>Instagram</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card text-center p-3">
+                    <h2 class="mb-0"><i class="bi bi-facebook"></i>
+                        {{ approved|selectattr('piattaforma', 'containing', 'Facebook')|list|length }}
+                    </h2>
+                    <small>Facebook / TikTok</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="mb-4">
+            <button class="btn filter-btn active" onclick="filterPosts('all', this)">
+                <i class="bi bi-grid"></i> Tutti
+            </button>
+            <button class="btn filter-btn" onclick="filterPosts('Instagram', this)">
+                <i class="bi bi-instagram"></i> Instagram
+            </button>
+            <button class="btn filter-btn" onclick="filterPosts('Facebook', this)">
+                <i class="bi bi-facebook"></i> Facebook
+            </button>
+            <button class="btn filter-btn" onclick="filterPosts('TikTok', this)">
+                <i class="bi bi-tiktok"></i> TikTok
+            </button>
+        </div>
+
+        <!-- Post List -->
+        {% if approved %}
+        <div class="row" id="postGrid">
+            {% for idea in approved|reverse %}
+            <div class="col-md-6 col-lg-4 mb-4 post-card" data-platform="{{ idea.piattaforma }}">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+
+                        <!-- Badge Platform -->
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            {% if 'Instagram' in idea.piattaforma %}
+                            <span class="badge" style="background: linear-gradient(45deg, #f09433, #e6683c, #dc2743); font-size: 0.8rem;">
+                                <i class="bi bi-instagram"></i> Instagram
+                            </span>
+                            {% elif 'Facebook' in idea.piattaforma %}
+                            <span class="badge bg-primary" style="font-size: 0.8rem;">
+                                <i class="bi bi-facebook"></i> Facebook
+                            </span>
+                            {% elif 'TikTok' in idea.piattaforma %}
+                            <span class="badge" style="background: #010101; font-size: 0.8rem;">
+                                <i class="bi bi-tiktok"></i> TikTok
+                            </span>
+                            {% endif %}
+
+                            {% if idea.get('edited_at') %}
+                            <span class="badge bg-secondary" style="font-size: 0.7rem;">
+                                <i class="bi bi-pencil"></i> Modificato
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Titolo -->
+                        <h5 class="card-title">{{ idea.titolo }}</h5>
+
+                        <!-- Testo Post Preview -->
+                        <p class="card-text small text-muted flex-grow-1">
+                            {{ idea.testo_post[:100] }}{% if idea.testo_post|length > 100 %}...{% endif %}
+                        </p>
+
+                        <!-- Media Suggeriti -->
+                        <p class="small text-info mb-3">
+                            <i class="bi bi-image"></i> {{ idea.media_suggeriti }}
+                        </p>
+
+                        <!-- Data -->
+                        <p class="small text-muted mb-3">
+                            <i class="bi bi-calendar3"></i>
+                            {% if idea.get('approved_at') %}
+                                {{ idea.approved_at[:16].replace('T', ' ') }}
+                            {% elif idea.get('timestamp') %}
+                                {{ idea.timestamp[:16].replace('T', ' ') }}
+                            {% endif %}
+                        </p>
+
+                        <!-- Buttons -->
+                        <div class="d-grid gap-2 mt-auto">
+                            <!-- Anteprima -->
+                            <button class="btn btn-outline-info btn-sm"
+                                    onclick="showPreview({{ loop.revindex0 }})">
+                                <i class="bi bi-eye"></i> Anteprima
+                            </button>
+
+                            <div class="row g-2">
+                                <!-- Copia -->
+                                <div class="col-4">
+                                    <button class="btn btn-info btn-sm w-100"
+                                            onclick="copyPost('{{ idea.testo_post|replace("'", "\\'") }}', '{{ idea.piattaforma }}')">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                                <!-- Modifica -->
+                                <div class="col-4">
+                                    <button class="btn btn-outline-warning btn-sm w-100"
+                                            onclick="openEdit({{ loop.revindex0 }})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
+                                <!-- Cancella -->
+                                <div class="col-4">
+                                    <button class="btn btn-outline-danger btn-sm w-100"
+                                            onclick="deleteIdea({{ loop.revindex0 }})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <p>Nessun post approvato ancora.<br>
+            <a href="/" class="btn btn-back btn-sm mt-2">
+                <i class="bi bi-arrow-left"></i> Torna alla Dashboard
+            </a></p>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- ─── MODALE ANTEPRIMA ─── -->
+    <div class="modal fade" id="previewModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content" style="background: transparent; border: none; box-shadow: none;">
+                <div class="text-end mb-2">
+                    <button type="button" class="btn btn-outline-light btn-sm"
+                            data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i> Chiudi
+                    </button>
+                </div>
+                <div id="previewContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── MODALE MODIFICA ─── -->
+    <div class="modal fade modal-dark" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil"></i> Modifica Post</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editIdeaId">
+
+                    <label class="form-label">Titolo</label>
+                    <input type="text" class="form-control mb-3" id="editTitolo">
+
+                    <label class="form-label">Testo Post</label>
+                    <textarea class="form-control mb-3" id="editTestoPost" rows="4"></textarea>
+
+                    <label class="form-label">Descrizione</label>
+                    <input type="text" class="form-control mb-3" id="editDescrizione">
+
+                    <label class="form-label">Media Suggeriti</label>
+                    <input type="text" class="form-control mb-3" id="editMediaSuggeriti">
+
+                    <label class="form-label">Piattaforma</label>
+                    <select class="form-select" id="editPiattaforma">
+                        <option value="Instagram">Instagram</option>
+                        <option value="Facebook">Facebook</option>
+                        <option value="TikTok">TikTok</option>
+                    </select>
+                </div>
+                <div class="modal-footer" style="border-top-color: rgba(255,107,53,0.3);">
+                    <button type="button" class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">Annulla</button>
+                    <button type="button" class="btn btn-warning text-dark"
+                            onclick="saveEdit()">
+                        <i class="bi bi-save"></i> Salva
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ─── DATI POST (dal backend) ───
+        const allIdeas = {{ approved|tojson }};
+        // allIdeas è in ordine originale; le card sono mostrate in reverse
+
+        // ─── TOAST ───
+        function showToast(message, type = 'success') {
+            const container = document.querySelector('.toast-container');
+            const id = 'toast-' + Date.now();
+            container.insertAdjacentHTML('beforeend', `
+                <div id="${id}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `);
+            const el = document.getElementById(id);
+            new bootstrap.Toast(el).show();
+            setTimeout(() => el.remove(), 5000);
+        }
+
+        // ─── COPIA POST ───
+        function copyPost(text, platform) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`📋 Post copiato! Incolla su ${platform}`, 'success');
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast(`📋 Post copiato! Incolla su ${platform}`, 'success');
+            });
+        }
+
+        // ─── FILTRI ───
+        function filterPosts(platform, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.querySelectorAll('.post-card').forEach(card => {
+                if (platform === 'all') {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = card.dataset.platform.includes(platform) ? 'block' : 'none';
+                }
+            });
+        }
+
+        // ─── ANTEPRIMA ───
+        function showPreview(ideaIndex) {
+            const idea = allIdeas[ideaIndex];
+            if (!idea) return;
+
+            let html = '';
+
+            if (idea.piattaforma.includes('Instagram')) {
+                html = `
+                <div class="preview-instagram">
+                    <div class="ig-header">
+                        <div class="ig-avatar">S</div>
+                        <div>
+                            <div class="ig-username">sunset_social</div>
+                            <div class="ig-location">{{ config.location }}</div>
+                        </div>
+                    </div>
+                    <div class="ig-image">📸</div>
+                    <div class="ig-actions">
+                        <i class="bi bi-heart"></i>
+                        <i class="bi bi-chat"></i>
+                        <i class="bi bi-share"></i>
+                    </div>
+                    <div class="ig-caption">
+                        <strong>sunset_social</strong> ${idea.testo_post}
+                        <div class="ig-hashtags">${idea.media_suggeriti}</div>
+                    </div>
+                    <div class="ig-time">Poco fa</div>
+                </div>`;
+
+            } else if (idea.piattaforma.includes('Facebook')) {
+                html = `
+                <div class="preview-facebook">
+                    <div class="fb-header">
+                        <div class="fb-avatar">S</div>
+                        <div>
+                            <div class="fb-username">Sunset Social</div>
+                            <div class="fb-time">Poco fa · 🌐</div>
+                        </div>
+                    </div>
+                    <div class="fb-text">${idea.testo_post}</div>
+                    <div class="fb-image">📢</div>
+                    <div class="fb-actions">
+                        <span><i class="bi bi-hand-thumbs-up"></i> Mi piace</span>
+                        <span><i class="bi bi-chat"></i> Commenta</span>
+                        <span><i class="bi bi-share"></i> Condividi</span>
+                    </div>
+                </div>`;
+
+            } else if (idea.piattaforma.includes('TikTok')) {
+                html = `
+                <div class="preview-tiktok">
+                    <div class="tt-video">
+                        <div class="tt-video-icon">🎬</div>
+                        <div class="tt-overlay">
+                            <div class="tt-username">@sunset_social</div>
+                            <div class="tt-caption">${idea.testo_post}</div>
+                            <div class="tt-hashtags">${idea.media_suggeriti}</div>
+                        </div>
+                        <div class="tt-sidebar">
+                            <div><i class="bi bi-heart-fill"></i><br>1.2K</div>
+                            <div><i class="bi bi-chat-fill"></i><br>84</div>
+                            <div><i class="bi bi-share-fill"></i><br>32</div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            document.getElementById('previewContent').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('previewModal')).show();
+        }
+
+        // ─── MODIFICA ───
+        function openEdit(ideaIndex) {
+            const idea = allIdeas[ideaIndex];
+            if (!idea) return;
+
+            document.getElementById('editIdeaId').value = ideaIndex;
+            document.getElementById('editTitolo').value = idea.titolo || '';
+            document.getElementById('editTestoPost').value = idea.testo_post || '';
+            document.getElementById('editDescrizione').value = idea.descrizione || '';
+            document.getElementById('editMediaSuggeriti').value = idea.media_suggeriti || '';
+            document.getElementById('editPiattaforma').value = idea.piattaforma || 'Instagram';
+
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        async function saveEdit() {
+            const ideaId = document.getElementById('editIdeaId').value;
+
+            const updates = {
+                titolo: document.getElementById('editTitolo').value,
+                testo_post: document.getElementById('editTestoPost').value,
+                descrizione: document.getElementById('editDescrizione').value,
+                media_suggeriti: document.getElementById('editMediaSuggeriti').value,
+                piattaforma: document.getElementById('editPiattaforma').value
+            };
+
+            try {
+                const response = await fetch(`/api/edit-idea/${ideaId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updates)
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('✅ Post modificato!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('❌ ' + data.message, 'danger');
+                }
+            } catch (e) {
+                showToast('❌ Errore di connessione', 'danger');
+            }
+        }
+
+        // ─── CANCELLAZIONE ───
+        async function deleteIdea(ideaIndex) {
+            if (!confirm('Sei sicuro di voler cancellare questo post? Non potrai recuperarlo.')) return;
+
+            try {
+                const response = await fetch(`/api/delete-idea/${ideaIndex}`, { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('🗑️ Post cancellato', 'warning');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('❌ ' + data.message, 'danger');
+                }
+            } catch (e) {
+                showToast('❌ Errore di connessione', 'danger');
+            }
+        }
+    </script>
+</body>
+</html>
